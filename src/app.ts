@@ -4,6 +4,8 @@ import cors from "cors";
 import healthRoutes from "./routes/healthRoutes";
 import baseRoutes from "./routes/baseRoutes";
 import { manejarErrores, rutaNoEncontrada } from "./middleware/errorHandler";
+import swaggerUi from "swagger-ui-express";
+import { openApiSpec } from "./docs/openapi";
 
 const origenesPermitidos = (process.env.CORS_ORIGINS ?? "")
   .split(",")
@@ -24,6 +26,7 @@ app.use(
   })
 );
 app.use(express.json());
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
 app.use("/api", healthRoutes);
 app.use("/api", baseRoutes);
