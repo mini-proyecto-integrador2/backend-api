@@ -1,0 +1,19 @@
+services:
+  api:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      PORT: 3000
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+      FIREBASE_SERVICE_ACCOUNT: /run/secrets/firebase-service-account.json
+    volumes:
+      - ${FIREBASE_KEY_PATH}:/run/secrets/firebase-service-account.json:ro
+
+  realtime:
+    build: ../backend-realtime
+    ports:
+      - "4000:4000"
+    environment:
+      PORT: 4000
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
