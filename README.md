@@ -22,6 +22,7 @@ Copia `.env.example` a `.env` y completa los valores.
 | `PORT` | Puerto en el que escucha la API | `3000` |
 | `CORS_ORIGINS` | Orígenes permitidos, separados por comas | `http://localhost:5173,https://tu-app.vercel.app` |
 | `FIREBASE_SERVICE_ACCOUNT` | Ruta al archivo JSON de la cuenta de servicio (local) o el JSON completo (Render) | `./ruta/a/service-account.json` |
+| `FIREBASE_KEY_PATH` | Ruta (generica) al JSON de la cuenta de servicio, solo para docker compose | `C:/ruta/a/firebase-service-account.json` |
 
 Nunca se sube la clave de servicio al repositorio.
 
