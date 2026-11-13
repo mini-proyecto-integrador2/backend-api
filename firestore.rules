@@ -1,0 +1,10 @@
+rules_version = '2';
+// Los clientes (navegador) no leen ni escriben Firestore directamente:
+// todo pasa por la API, que usa Firebase Admin SDK (las reglas no le aplican).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
