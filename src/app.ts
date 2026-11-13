@@ -38,7 +38,8 @@ app.use(
       if (!origin || origenesPermitidos.includes(origin)) {
         return callback(null, true);
       }
-      callback(new Error("Origen no permitido por CORS"));
+      // Origen no permitido: se rechaza sin lanzar error (antes respondía 500).
+      callback(null, false); // CAMBIO
     },
   })
 );
