@@ -14,12 +14,12 @@ export class UsernameTakenError extends Error {}
 export class PerfilExisteError extends Error {}
 export class PerfilNoExisteError extends Error {}
 
-const usuarios = () => db.collection("usuarios");
+const users = () => db.collection("users");
 // Un documento por username (en minúsculas): garantiza la unicidad dentro de una transacción.
 const usernames = () => db.collection("usernames");
 
 export async function obtenerPerfil(uid: string): Promise<Perfil | null> {
-  const doc = await usuarios().doc(uid).get();
+  const doc = await users().doc(uid).get();
   return doc.exists ? (doc.data() as Perfil) : null;
 }
 
@@ -29,7 +29,7 @@ export async function usernameOcupado(username: string): Promise<boolean> {
 }
 
 export async function crearPerfil(perfil: Perfil): Promise<Perfil> {
-  const uRef = usuarios().doc(perfil.uid);
+  const uRef = users().doc(perfil.uid);
   const nRef = usernames().doc(perfil.username.toLowerCase());
   await db.runTransaction(async (tx) => {
     const [u, n] = await Promise.all([tx.get(uRef), tx.get(nRef)]);
@@ -45,7 +45,7 @@ export async function actualizarPerfil(
   uid: string,
   cambios: Partial<Pick<Perfil, "nombres" | "apellidos" | "avatar" | "username">>
 ): Promise<Perfil> {
-  const uRef = usuarios().doc(uid);
+  const uRef = users().doc(uid);
   await db.runTransaction(async (tx) => {
     const uSnap = await tx.get(uRef);
     if (!uSnap.exists) throw new PerfilNoExisteError();
@@ -71,7 +71,7 @@ export async function actualizarPerfil(
 }
 
 export async function eliminarPerfil(uid: string): Promise<void> {
-  const uRef = usuarios().doc(uid);
+  const uRef = users().doc(uid);
   await db.runTransaction(async (tx) => {
     const uSnap = await tx.get(uRef);
     if (!uSnap.exists) return;

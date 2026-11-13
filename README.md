@@ -68,7 +68,7 @@ En los errores de validación se agrega `campos` con el detalle por campo. Una r
 
 El inicio de sesión lo hace el cliente con Firebase Authentication (correo y contraseña, o Google). La API solo verifica el ID token que llega en `Authorization: Bearer <token>`; si falta o es inválido responde `401 UNAUTHORIZED`. Las rutas con «Sí» en la columna Auth lo exigen.
 
-El nombre de usuario es único (3 a 20 caracteres: letras, números o guion bajo) y se valida en el servidor con una transacción de Firestore: el perfil vive en la colección `usuarios` (id = uid) y el nombre reservado en `usernames`. Si el registro falla al crear el perfil, la cuenta recién creada se elimina. El detalle de cada ruta está en Swagger (`/api/docs`).
+El nombre de usuario es único (3 a 20 caracteres: letras, números o guion bajo) y se valida en el servidor con una transacción de Firestore: el perfil vive en la colección `users` (id = uid) y el nombre reservado en `usernames`. Si el registro falla al crear el perfil, la cuenta recién creada se elimina. El detalle de cada ruta está en Swagger (`/api/docs`).
 
 ## Despliegue
 
