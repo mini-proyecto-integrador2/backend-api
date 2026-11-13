@@ -3,14 +3,31 @@ import express from "express";
 import cors from "cors";
 import healthRoutes from "./routes/healthRoutes";
 import baseRoutes from "./routes/baseRoutes";
+import authRoutes from "./routes/authRoutes";
+import usuariosRoutes from "./routes/usuariosRoutes";
 import { manejarErrores, rutaNoEncontrada } from "./middleware/errorHandler";
 import swaggerUi from "swagger-ui-express";
 import { openApiSpec } from "./docs/openapi";
+import { esquemasUsuarios, rutasUsuarios } from "./docs/openapiUsuarios";
 
 const origenesPermitidos = (process.env.CORS_ORIGINS ?? "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
+
+// Especificación base + endpoints de usuarios (TS-01) + esquema de seguridad Bearer.
+const base: any = openApiSpec;
+const especificacion = {
+  ...base,
+  paths: { ...base.paths, ...rutasUsuarios },
+  components: {
+    ...base.components,
+    schemas: { ...base.components?.schemas, ...esquemasUsuarios },
+    securitySchemes: {
+      bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT", description: "ID token de Firebase Auth" },
+    },
+  },
+};
 
 const app = express();
 
@@ -26,10 +43,12 @@ app.use(
   })
 );
 app.use(express.json());
-app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(especificacion));
 
 app.use("/api", healthRoutes);
 app.use("/api", baseRoutes);
+app.use("/api", authRoutes);
+app.use("/api", usuariosRoutes);
 
 app.use(rutaNoEncontrada);
 app.use(manejarErrores);
