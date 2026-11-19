@@ -110,6 +110,11 @@ export async function crearPerfilGoogle(usuario: UsuarioAutenticado, body: any):
   const username = texto(body?.username);
   if (!RE_USERNAME.test(username)) validacion({ username: MSG.username });
 
+  // Avatar elegido en el frontend (A, B, C o D). Si no viene o no es válido, se usa 'A'.
+  const AVATARES_VALIDOS = ["A", "B", "C", "D"];
+  const avatarSolicitado = texto(body?.avatar);
+  const avatar = AVATARES_VALIDOS.includes(avatarSolicitado) ? avatarSolicitado : "A";
+
   const partes = (usuario.nombre ?? "").trim().split(/\s+/).filter(Boolean);
   const apellidos = partes.length > 1 ? partes[partes.length - 1] : "";
   const nombres = partes.length > 1 ? partes.slice(0, -1).join(" ") : (partes[0] ?? "");
@@ -119,7 +124,7 @@ export async function crearPerfilGoogle(usuario: UsuarioAutenticado, body: any):
       nombres,
       apellidos,
       username,
-      avatar: usuario.foto ?? "avatar-1",
+      avatar,
       correo: (usuario.correo ?? "").toLowerCase(),
       creado: new Date().toISOString(),
     });

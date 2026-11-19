@@ -144,14 +144,28 @@ export const rutasUsuarios = {
       summary: "Crear el perfil tras entrar con Google",
       description: "Nombre, correo y foto salen del token de Google; la persona solo elige su username.",
       security: seguridad,
+
       requestBody: {
         required: true,
         content: {
           "application/json": {
-            schema: { type: "object", required: ["username"], properties: { username: { type: "string", example: "camila_rojas" } } },
+            schema: {
+              type: "object",
+              required: ["username"],
+              properties: {
+                username: { type: "string", example: "camila_rojas" },
+                avatar: {
+                  type: "string",
+                  enum: ["A", "B", "C", "D"],
+                  example: "A",
+                  description: "Opcional. Por defecto A.",
+                },
+              },
+            },
           },
         },
       },
+
       responses: {
         "201": perfilOk("Perfil creado"),
         "400": resp("VALIDATION_ERROR"),
