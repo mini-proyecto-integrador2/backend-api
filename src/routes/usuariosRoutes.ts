@@ -1,12 +1,21 @@
 import { Router } from "express";
 import { requiereAuth } from "../middleware/auth";
-import { actualizar, crearPerfilGoogle, eliminar, leerPerfil } from "../services/usuariosService";
+import { actualizar, consultarDisponibilidad, crearPerfilGoogle, eliminar, leerPerfil, } from "../services/usuariosService";
 
 const router = Router();
 
 router.get("/usuarios/yo", requiereAuth, async (req, res, next) => {
   try {
     res.json({ perfil: await leerPerfil(req.usuario!.uid) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.get("/usuarios/disponible", async (req, res, next) => {
+  try {
+    const disponible = await consultarDisponibilidad(req.query.usuario);
+    res.json({ disponible });
   } catch (error) {
     next(error);
   }
@@ -39,3 +48,4 @@ router.delete("/usuarios/yo", requiereAuth, async (req, res, next) => {
 });
 
 export default router;
+

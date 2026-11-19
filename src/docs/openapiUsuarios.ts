@@ -57,6 +57,39 @@ export const rutasUsuarios = {
       },
     },
   },
+
+  "/api/usuarios/disponible": {
+    get: {
+      tags: ["Usuarios"],
+      summary: "Consultar si un nombre de usuario está disponible",
+      description: "No requiere autenticación. Devuelve si el username se puede usar.",
+      parameters: [
+        {
+          in: "query",
+          name: "usuario",
+          required: true,
+          schema: { type: "string", example: "camila_rojas" },
+          description: "3 a 20 caracteres: letras, números y guion bajo.",
+        },
+      ],
+      responses: {
+        "200": {
+          description: "Disponibilidad del nombre de usuario",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: { disponible: { type: "boolean", example: true } },
+              },
+            },
+          },
+        },
+        "400": resp("VALIDATION_ERROR: formato de username inválido"),
+        "503": resp("FIRESTORE_UNAVAILABLE"),
+      },
+    },
+  },
+
   "/api/usuarios/yo": {
     get: {
       tags: ["Usuarios"],
@@ -104,6 +137,7 @@ export const rutasUsuarios = {
       responses: { "204": { description: "Cuenta eliminada" }, "401": resp("UNAUTHORIZED") },
     },
   },
+
   "/api/usuarios/perfil": {
     post: {
       tags: ["Usuarios"],
