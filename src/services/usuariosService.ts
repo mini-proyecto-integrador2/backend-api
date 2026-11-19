@@ -11,6 +11,7 @@ import {
   eliminarPerfil,
   obtenerPerfil,
   usernameOcupado,
+  nombreUsuarioDisponible,
 } from "../repositories/usuariosRepository";
 
 const RE_USERNAME = /^[A-Za-z0-9_]{3,20}$/;
@@ -168,5 +169,25 @@ export async function eliminar(uid: string): Promise<void> {
       console.error("Error eliminando usuario de Auth:", e);
       throw new AppError(503, "AUTH_UNAVAILABLE", "Se borró tu perfil, pero no se pudo cerrar tu cuenta. Intenta de nuevo.");
     }
+  }
+}
+
+export async function consultarDisponibilidad(usuario: unknown): Promise<boolean> {
+  if (typeof usuario !== "string" || !RE_USERNAME.test(usuario)) {
+    throw new AppError(
+      400,
+      "VALIDATION_ERROR",
+      "El nombre de usuario debe tener entre 3 y 20 caracteres: letras, números o guion bajo."
+    );
+  }
+  try {
+    return await nombreUsuarioDisponible(usuario);
+  } catch (e) {
+    console.error("Error consultando disponibilidad:", e);
+    throw new AppError(
+      503,
+      "FIRESTORE_UNAVAILABLE",
+      "No se pudo consultar el nombre de usuario. Intenta de nuevo."
+    );
   }
 }

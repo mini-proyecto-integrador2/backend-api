@@ -1,5 +1,6 @@
 import { db } from "../config/firebase";
 
+
 export interface Perfil {
   uid: string;
   nombres: string;
@@ -79,4 +80,10 @@ export async function eliminarPerfil(uid: string): Promise<void> {
     tx.delete(usernames().doc(actual.username.toLowerCase()));
     tx.delete(uRef);
   });
+}
+
+// Devuelve true si el username NO está ocupado.
+export async function nombreUsuarioDisponible(usuario: string): Promise<boolean> {
+  const doc = await db.collection("usernames").doc(usuario.toLowerCase()).get();
+  return !doc.exists;
 }
