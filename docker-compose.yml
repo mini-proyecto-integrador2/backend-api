@@ -17,6 +17,10 @@ services:
     environment:
       PORT: 4000
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:5173}
+       #Desde TS-02 el servidor de tiempo real verifica el token y usa Firestore: necesita la misma cuenta de servicio.
+      FIREBASE_SERVICE_ACCOUNT: /run/secrets/firebase-service-account.json
+    volumes:
+      - ${FIREBASE_KEY_PATH}:/run/secrets/firebase-service-account.json:ro
 
   frontend:
     build:
