@@ -5,24 +5,26 @@ import healthRoutes from "./routes/healthRoutes";
 import baseRoutes from "./routes/baseRoutes";
 import authRoutes from "./routes/authRoutes";
 import usuariosRoutes from "./routes/usuariosRoutes";
+import salasRoutes from "./routes/salasRoutes";
 import { manejarErrores, rutaNoEncontrada } from "./middleware/errorHandler";
 import swaggerUi from "swagger-ui-express";
 import { openApiSpec } from "./docs/openapi";
 import { esquemasUsuarios, rutasUsuarios } from "./docs/openapiUsuarios";
+import { esquemasSalas, rutasSalas } from "./docs/openapiSalas";
 
 const origenesPermitidos = (process.env.CORS_ORIGINS ?? "")
   .split(",")
   .map((o) => o.trim())
   .filter(Boolean);
 
-// Especificación base + endpoints de usuarios (TS-01) + esquema de seguridad Bearer.
+// Especificación base + endpoints de usuarios (TS-01) y salas (US-06) + esquema de seguridad Bearer.
 const base: any = openApiSpec;
 const especificacion = {
   ...base,
-  paths: { ...base.paths, ...rutasUsuarios },
+  paths: { ...base.paths, ...rutasUsuarios, ...rutasSalas },
   components: {
     ...base.components,
-    schemas: { ...base.components?.schemas, ...esquemasUsuarios },
+    schemas: { ...base.components?.schemas, ...esquemasUsuarios, ...esquemasSalas },
     securitySchemes: {
       bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT", description: "ID token de Firebase Auth" },
     },
@@ -50,6 +52,7 @@ app.use("/api", healthRoutes);
 app.use("/api", baseRoutes);
 app.use("/api", authRoutes);
 app.use("/api", usuariosRoutes);
+app.use("/api", salasRoutes);
 
 app.use(rutaNoEncontrada);
 app.use(manejarErrores);

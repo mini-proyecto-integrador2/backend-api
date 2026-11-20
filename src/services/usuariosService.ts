@@ -13,6 +13,7 @@ import {
   usernameOcupado,
   nombreUsuarioDisponible,
 } from "../repositories/usuariosRepository";
+import { eliminarSalasDe } from "../repositories/salasRepository";
 
 const RE_USERNAME = /^[A-Za-z0-9_]{3,20}$/;
 const RE_CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -163,6 +164,8 @@ export async function actualizar(uid: string, body: any): Promise<Perfil> {
 
 export async function eliminar(uid: string): Promise<void> {
   try {
+    // Primero sus salas (con sus mensajes) y luego el perfil: no quedan datos huérfanos.
+    await eliminarSalasDe(uid);
     await eliminarPerfil(uid);
   } catch (e) {
     traducirError(e);
