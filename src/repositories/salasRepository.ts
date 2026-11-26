@@ -1,10 +1,12 @@
 import { db } from "../config/firebase";
+import { FieldValue } from "firebase-admin/firestore";
 
 export interface Sala {
   id: string;
   nombre: string;
   anfitrion: { uid: string; username: string };
   creada: string;
+  miembros?: string[]; // UIDs de quienes se unieron (no incluye al anfitrión)
 }
 
 // Colección de salas (TS-02). Los mensajes del Sprint 3 irán en rooms/{id}/messages.
@@ -48,4 +50,9 @@ export async function obtenerSala(id: string): Promise<Sala | null> {
 export async function eliminarSalasDe(uid: string): Promise<void> {
   const snap = await rooms().where("anfitrion.uid", "==", uid).get();
   await Promise.all(snap.docs.map((d) => db.recursiveDelete(d.ref)));
+}
+
+// arrayUnion es atómico y no duplica: unirse es idempotente.
+export async function agregarMiembro(id: string, uid: string): Promise<void> {
+  await rooms().doc(id).update({ miembros: FieldValue.arrayUnion(uid) });
 }
