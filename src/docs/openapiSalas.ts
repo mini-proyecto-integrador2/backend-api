@@ -38,6 +38,15 @@ export const esquemasSalas = {
       nombre: { type: "string", example: "Cálculo multivariado", description: "Entre 3 y 40 caracteres." },
     },
   },
+
+  EditarSalaRequest: {
+    type: "object",
+    required: ["nombre"],
+    properties: {
+      nombre: { type: "string", example: "Cálculo avanzado", description: "Entre 3 y 40 caracteres." },
+    },
+  },
+
 };
 
 export const rutasSalas = {
@@ -85,6 +94,38 @@ export const rutasSalas = {
       responses: {
         "200": salaOk("Sala encontrada"),
         "401": resp("UNAUTHORIZED"),
+        "404": resp("ROOM_NOT_FOUND: no existe una sala con ese ID"),
+        "503": resp("FIRESTORE_UNAVAILABLE"),
+      },
+    },
+
+    patch: {
+      tags: ["Salas"],
+      summary: "Editar el nombre de una sala",
+      description: "Solo el anfitrión puede editarla. El orden de validación es: existe (404), es el anfitrión (403) y el nombre es válido (400).",
+      security: seguridad,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", example: "MAT-4821" } }],
+      requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/EditarSalaRequest" } } } },
+      responses: {
+        "200": salaOk("Sala actualizada"),
+        "400": resp("VALIDATION_ERROR: el nombre está vacío o no tiene entre 3 y 40 caracteres (campos.nombre)"),
+        "401": resp("UNAUTHORIZED: falta el token o no es válido"),
+        "403": resp("FORBIDDEN: solo el anfitrión puede editar la sala"),
+        "404": resp("ROOM_NOT_FOUND: no existe una sala con ese ID"),
+        "503": resp("FIRESTORE_UNAVAILABLE"),
+      },
+    },
+
+    delete: {
+      tags: ["Salas"],
+      summary: "Eliminar una sala",
+      description: "Solo el anfitrión puede eliminarla. Se borran también sus mensajes, para no dejar datos huérfanos.",
+      security: seguridad,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", example: "MAT-4821" } }],
+      responses: {
+        "204": { description: "Sala eliminada (sin contenido)" },
+        "401": resp("UNAUTHORIZED: falta el token o no es válido"),
+        "403": resp("FORBIDDEN: solo el anfitrión puede eliminar la sala"),
         "404": resp("ROOM_NOT_FOUND: no existe una sala con ese ID"),
         "503": resp("FIRESTORE_UNAVAILABLE"),
       },
