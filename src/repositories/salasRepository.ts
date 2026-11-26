@@ -71,3 +71,8 @@ export async function listarSalasDeUsuario(uid: string): Promise<Sala[]> {
 export async function actualizarNombre(id: string, nombre: string): Promise<void> {
   await rooms().doc(id).update({ nombre });
 }
+
+// Borra la sala y su subcolección de mensajes.
+export async function eliminarSala(id: string): Promise<void> {
+  await db.recursiveDelete(rooms().doc(id));
+}

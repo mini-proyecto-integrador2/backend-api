@@ -1,6 +1,6 @@
 import { AppError } from "../middleware/AppError";
 import { obtenerPerfil } from "../repositories/usuariosRepository";
-import { Sala, actualizarNombre, agregarMiembro, crearSala, listarSalasDeUsuario, obtenerSala } from "../repositories/salasRepository";
+import { Sala, actualizarNombre, agregarMiembro, crearSala, eliminarSala, listarSalasDeUsuario, obtenerSala } from "../repositories/salasRepository";
 
 const NOMBRE_MIN = 3;
 const NOMBRE_MAX = 40;
@@ -109,4 +109,15 @@ export async function editar(uid: string, idCrudo: string, cuerpo: any): Promise
     sinFirestore(e);
   }
   return aPublica({ ...sala, nombre }, uid);
+}
+
+// US-07: el orden es existencia (404) y permiso (403).
+export async function eliminar(uid: string, idCrudo: string): Promise<void> {
+  const sala = await consultar(idCrudo);
+  soloAnfitrion(sala, uid);
+  try {
+    await eliminarSala(sala.id);
+  } catch (e) {
+    sinFirestore(e);
+  }
 }
