@@ -1,10 +1,12 @@
 import { db } from "../config/firebase";
+import { FieldValue } from "firebase-admin/firestore";
 
 export interface Sala {
   id: string;
   nombre: string;
   anfitrion: { uid: string; username: string };
   creada: string;
+  miembros?: string[]; // UIDs de quienes se unieron (no incluye al anfitrión)
 }
 
 // Colección de salas (TS-02). Los mensajes del Sprint 3 irán en rooms/{id}/messages.
@@ -48,4 +50,20 @@ export async function obtenerSala(id: string): Promise<Sala | null> {
 export async function eliminarSalasDe(uid: string): Promise<void> {
   const snap = await rooms().where("anfitrion.uid", "==", uid).get();
   await Promise.all(snap.docs.map((d) => db.recursiveDelete(d.ref)));
+}
+
+// arrayUnion es atómico y no duplica: unirse es idempotente.
+export async function agregarMiembro(id: string, uid: string): Promise<void> {
+  await rooms().doc(id).update({ miembros: FieldValue.arrayUnion(uid) });
+}
+
+// Salas propias + salas donde el usuario se unió, sin duplicados y las más nuevas primero.
+export async function listarSalasDeUsuario(uid: string): Promise<Sala[]> {
+  const [propias, unidas] = await Promise.all([
+    rooms().where("anfitrion.uid", "==", uid).get(),
+    rooms().where("miembros", "array-contains", uid).get(),
+  ]);
+  const porId = new Map<string, Sala>();
+  for (const d of [...propias.docs, ...unidas.docs]) porId.set(d.id, d.data() as Sala);
+  return [...porId.values()].sort((a, b) => b.creada.localeCompare(a.creada));
 }

@@ -28,6 +28,7 @@ export const esquemasSalas = {
         },
       },
       creada: { type: "string", format: "date-time" },
+      esCreador: { type: "boolean", example: true, description: "true si quien consulta es el anfitrión de la sala. Sirve para mostrar u ocultar editar y eliminar." },
     },
   },
   CrearSalaRequest: {
@@ -57,8 +58,8 @@ export const rutasSalas = {
     },
     get: {
       tags: ["Salas"],
-      summary: "Mis salas",
-      description: "Lista las salas creadas por quien tiene la sesión iniciada, las más nuevas primero. Si no tiene salas, la lista viene vacía.",
+      summary: "Mis salas y salas a las que me uní",
+      description: "Lista las salas creadas por quien tiene la sesión iniciada y las salas a las que se unió, sin duplicados y las más nuevas primero. Cada sala incluye esCreador. Si no tiene salas, la lista viene vacía.",
       security: seguridad,
       responses: {
         "200": {
@@ -84,6 +85,22 @@ export const rutasSalas = {
       responses: {
         "200": salaOk("Sala encontrada"),
         "401": resp("UNAUTHORIZED"),
+        "404": resp("ROOM_NOT_FOUND: no existe una sala con ese ID"),
+        "503": resp("FIRESTORE_UNAVAILABLE"),
+      },
+    },
+  },
+  
+  "/api/salas/{id}/unirse": {
+    post: {
+      tags: ["Salas"],
+      summary: "Unirse a una sala",
+      description: "Agrega a quien tiene la sesión iniciada como miembro de la sala. Es idempotente: si ya era miembro, o es el anfitrión, responde 200 igual y no duplica nada. El ID se normaliza (se recortan espacios y se pasa a mayúsculas).",
+      security: seguridad,
+      parameters: [{ name: "id", in: "path", required: true, schema: { type: "string", example: "MAT-4821" } }],
+      responses: {
+        "200": salaOk("Dentro de la sala (también cuando ya era miembro)"),
+        "401": resp("UNAUTHORIZED: falta el token o no es válido"),
         "404": resp("ROOM_NOT_FOUND: no existe una sala con ese ID"),
         "503": resp("FIRESTORE_UNAVAILABLE"),
       },
