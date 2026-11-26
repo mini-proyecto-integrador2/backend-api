@@ -56,3 +56,14 @@ export async function eliminarSalasDe(uid: string): Promise<void> {
 export async function agregarMiembro(id: string, uid: string): Promise<void> {
   await rooms().doc(id).update({ miembros: FieldValue.arrayUnion(uid) });
 }
+
+// Salas propias + salas donde el usuario se unió, sin duplicados y las más nuevas primero.
+export async function listarSalasDeUsuario(uid: string): Promise<Sala[]> {
+  const [propias, unidas] = await Promise.all([
+    rooms().where("anfitrion.uid", "==", uid).get(),
+    rooms().where("miembros", "array-contains", uid).get(),
+  ]);
+  const porId = new Map<string, Sala>();
+  for (const d of [...propias.docs, ...unidas.docs]) porId.set(d.id, d.data() as Sala);
+  return [...porId.values()].sort((a, b) => b.creada.localeCompare(a.creada));
+}

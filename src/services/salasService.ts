@@ -1,6 +1,6 @@
 import { AppError } from "../middleware/AppError";
 import { obtenerPerfil } from "../repositories/usuariosRepository";
-import { Sala, agregarMiembro, crearSala, listarSalasDe, obtenerSala } from "../repositories/salasRepository";
+import { Sala, agregarMiembro, crearSala, listarSalasDeUsuario, obtenerSala } from "../repositories/salasRepository";
 
 const NOMBRE_MIN = 3;
 const NOMBRE_MAX = 40;
@@ -48,7 +48,7 @@ export async function crear(uid: string, cuerpo: any): Promise<SalaPublica> {
 
 export async function listarMias(uid: string): Promise<SalaPublica[]> {
   try {
-    const salas = await listarSalasDe(uid);
+    const salas = await listarSalasDeUsuario(uid);
     return salas.map((s) => aPublica(s, uid));
   } catch (e) {
     sinFirestore(e);
