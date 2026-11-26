@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requiereAuth } from "../middleware/auth";
-import { consultarPublica, crear, listarMias, unirse } from "../services/salasService";
+import { consultarPublica, crear, editar, listarMias, unirse } from "../services/salasService";
 
 // Salas de estudio (US-06, US-08). Todas las rutas exigen sesión.
 const router = Router();
@@ -32,6 +32,14 @@ router.get("/salas/:id", requiereAuth, async (req, res, next) => {
 router.post("/salas/:id/unirse", requiereAuth, async (req, res, next) => {
   try {
     res.json({ sala: await unirse(req.usuario!.uid, String(req.params.id)) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.patch("/salas/:id", requiereAuth, async (req, res, next) => {
+  try {
+    res.json({ sala: await editar(req.usuario!.uid, String(req.params.id), req.body) });
   } catch (error) {
     next(error);
   }

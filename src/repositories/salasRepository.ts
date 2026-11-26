@@ -67,3 +67,7 @@ export async function listarSalasDeUsuario(uid: string): Promise<Sala[]> {
   for (const d of [...propias.docs, ...unidas.docs]) porId.set(d.id, d.data() as Sala);
   return [...porId.values()].sort((a, b) => b.creada.localeCompare(a.creada));
 }
+
+export async function actualizarNombre(id: string, nombre: string): Promise<void> {
+  await rooms().doc(id).update({ nombre });
+}
