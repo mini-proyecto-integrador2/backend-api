@@ -1,6 +1,6 @@
 import { AppError } from "../middleware/AppError";
 import { obtenerPerfil } from "../repositories/usuariosRepository";
-import { Sala, agregarMiembro, crearSala, listarSalasDeUsuario, obtenerSala } from "../repositories/salasRepository";
+import { Sala, actualizarNombre, agregarMiembro, crearSala, eliminarSala, listarSalasDeUsuario, obtenerSala } from "../repositories/salasRepository";
 
 const NOMBRE_MIN = 3;
 const NOMBRE_MAX = 40;
@@ -20,6 +20,16 @@ function errorNombre(mensaje: string): never {
   throw error;
 }
 
+//Validación compartida q usan crear y editar
+function validarNombre(cuerpo: any): string {
+  const nombre = typeof cuerpo?.nombre === "string" ? cuerpo.nombre.trim().replace(/\s+/g, " ") : "";
+  if (!nombre) errorNombre("Escribe un nombre para la sala.");
+  if (nombre.length < NOMBRE_MIN || nombre.length > NOMBRE_MAX) {
+    errorNombre(`El nombre debe tener entre ${NOMBRE_MIN} y ${NOMBRE_MAX} caracteres.`);
+  }
+  return nombre;
+}
+
 function sinFirestore(e: unknown): never {
   if (e instanceof AppError) throw e;
   console.error("Error en Firestore (salas):", e);
@@ -27,11 +37,7 @@ function sinFirestore(e: unknown): never {
 }
 
 export async function crear(uid: string, cuerpo: any): Promise<SalaPublica> {
-  const nombre = typeof cuerpo?.nombre === "string" ? cuerpo.nombre.trim().replace(/\s+/g, " ") : "";
-  if (!nombre) errorNombre("Escribe un nombre para la sala.");
-  if (nombre.length < NOMBRE_MIN || nombre.length > NOMBRE_MAX) {
-    errorNombre(`El nombre debe tener entre ${NOMBRE_MIN} y ${NOMBRE_MAX} caracteres.`);
-  }
+  const nombre = validarNombre(cuerpo);
   try {
     const perfil = await obtenerPerfil(uid);
     if (!perfil) throw new AppError(404, "PROFILE_NOT_FOUND", "Completa tu perfil antes de crear salas.");
@@ -84,4 +90,34 @@ export async function unirse(uid: string, idCrudo: string): Promise<SalaPublica>
     sinFirestore(e);
   }
   return aPublica(sala, uid);
+}
+
+function soloAnfitrion(sala: Sala, uid: string): void {
+  if (sala.anfitrion.uid !== uid) {
+    throw new AppError(403, "FORBIDDEN", "Solo el anfitrión puede editar o eliminar esta sala.");
+  }
+}
+
+// US-07: el orden es existencia (404), permiso (403) y validación (400).
+export async function editar(uid: string, idCrudo: string, cuerpo: any): Promise<SalaPublica> {
+  const sala = await consultar(idCrudo);
+  soloAnfitrion(sala, uid);
+  const nombre = validarNombre(cuerpo);
+  try {
+    await actualizarNombre(sala.id, nombre);
+  } catch (e) {
+    sinFirestore(e);
+  }
+  return aPublica({ ...sala, nombre }, uid);
+}
+
+// US-07: el orden es existencia (404) y permiso (403).
+export async function eliminar(uid: string, idCrudo: string): Promise<void> {
+  const sala = await consultar(idCrudo);
+  soloAnfitrion(sala, uid);
+  try {
+    await eliminarSala(sala.id);
+  } catch (e) {
+    sinFirestore(e);
+  }
 }
