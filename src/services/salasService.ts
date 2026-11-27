@@ -1,7 +1,6 @@
 import { AppError } from "../middleware/AppError";
 import { obtenerPerfil } from "../repositories/usuariosRepository";
-import { Sala, actualizarNombre, agregarMiembro, crearSala, eliminarSala, listarSalasDeUsuario, obtenerSala } from "../repositories/salasRepository";
-
+import { Mensaje, Sala, actualizarNombre, agregarMiembro, crearSala, eliminarSala, listarMensajes, listarSalasDeUsuario, obtenerSala } from "../repositories/salasRepository";
 const NOMBRE_MIN = 3;
 const NOMBRE_MAX = 40;
 const RE_ID = /^[A-Z]{3}-\d{4}$/;
@@ -117,6 +116,44 @@ export async function eliminar(uid: string, idCrudo: string): Promise<void> {
   soloAnfitrion(sala, uid);
   try {
     await eliminarSala(sala.id);
+  } catch (e) {
+    sinFirestore(e);
+  }
+}
+
+const LIMITE_DEFECTO = 50;
+const LIMITE_MAX = 100;
+
+// US-11: historial paginado. Solo lo pueden leer el anfitrión y quienes se unieron a la sala.
+export async function historial(
+  uid: string,
+  idCrudo: string,
+  consulta: { limite?: unknown; antes?: unknown }
+): Promise<{ mensajes: Mensaje[]; hayMas: boolean }> {
+  const sala = await consultar(idCrudo);
+  const esMiembro = sala.anfitrion.uid === uid || (sala.miembros ?? []).includes(uid);
+  if (!esMiembro) throw new AppError(403, "FORBIDDEN", "Únete a la sala para ver su historial.");
+
+  let limite = LIMITE_DEFECTO;
+  if (consulta.limite !== undefined) {
+    limite = Number(consulta.limite);
+    if (!Number.isInteger(limite) || limite < 1) {
+      throw new AppError(400, "VALIDATION_ERROR", "El parámetro limite debe ser un número entero de 1 a 100.");
+    }
+    limite = Math.min(limite, LIMITE_MAX);
+  }
+
+  let antes: string | undefined;
+  if (consulta.antes !== undefined) {
+    const fecha = new Date(String(consulta.antes));
+    if (Number.isNaN(fecha.getTime())) {
+      throw new AppError(400, "VALIDATION_ERROR", "El parámetro antes debe ser una fecha ISO válida.");
+    }
+    antes = fecha.toISOString();
+  }
+
+  try {
+    return await listarMensajes(sala.id, limite, antes);
   } catch (e) {
     sinFirestore(e);
   }
