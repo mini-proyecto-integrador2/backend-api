@@ -76,3 +76,29 @@ export async function actualizarNombre(id: string, nombre: string): Promise<void
 export async function eliminarSala(id: string): Promise<void> {
   await db.recursiveDelete(rooms().doc(id));
 }
+
+export interface Mensaje {
+  id: string;
+  salaId: string;
+  autor: { uid: string; username: string };
+  texto: string;
+  enviado: string;
+}
+
+// Los `limite` mensajes anteriores a `antes` (o los más recientes si no se indica),
+// devueltos del más viejo al más nuevo. Se pide uno de más para saber si hay más.
+export async function listarMensajes(
+  salaId: string,
+  limite: number,
+  antes?: string
+): Promise<{ mensajes: Mensaje[]; hayMas: boolean }> {
+  let consulta = rooms().doc(salaId).collection("messages").orderBy("enviado", "desc");
+  if (antes) consulta = consulta.where("enviado", "<", antes);
+  const snap = await consulta.limit(limite + 1).get();
+  const hayMas = snap.size > limite;
+  const mensajes = snap.docs
+    .slice(0, limite)
+    .map((d) => d.data() as Mensaje)
+    .reverse();
+  return { mensajes, hayMas };
+}

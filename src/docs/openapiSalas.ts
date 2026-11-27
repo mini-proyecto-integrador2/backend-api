@@ -47,6 +47,23 @@ export const esquemasSalas = {
     },
   },
 
+  Mensaje: {
+    type: "object",
+    properties: {
+      id: { type: "string", example: "Tdm4m2Si7COrwm2CgCkZ" },
+      salaId: { type: "string", example: "MAT-4821" },
+      autor: {
+        type: "object",
+        properties: {
+          uid: { type: "string", example: "k3J9...uid" },
+          username: { type: "string", example: "camila_rojas" },
+        },
+      },
+      texto: { type: "string", example: "Hola a todos" },
+      enviado: { type: "string", format: "date-time" },
+    },
+  },
+
 };
 
 export const rutasSalas = {
@@ -147,4 +164,40 @@ export const rutasSalas = {
       },
     },
   },
+
+  "/api/salas/{id}/mensajes": {
+    get: {
+      tags: ["Salas"],
+      summary: "Historial de mensajes de una sala",
+      description: "Devuelve los mensajes de la sala del más viejo al más nuevo. Solo lo pueden leer el anfitrión y quienes se unieron. Sin parámetros trae los últimos 50. Para cargar los anteriores, envía en antes el campo enviado del primer mensaje que ya tienes. Los mensajes nuevos llegan en vivo por Socket.IO (chat:mensaje).",
+      security: seguridad,
+      parameters: [
+        { name: "id", in: "path", required: true, schema: { type: "string", example: "MAT-4821" } },
+        { name: "limite", in: "query", required: false, description: "Cantidad de mensajes (1 a 100, por defecto 50). Si es mayor a 100 se recorta a 100.", schema: { type: "integer", minimum: 1, maximum: 100, default: 50 } },
+        { name: "antes", in: "query", required: false, description: "Solo mensajes enviados antes de esta fecha ISO.", schema: { type: "string", format: "date-time" } },
+      ],
+      responses: {
+        "200": {
+          description: "Mensajes (la lista puede estar vacía) y si hay más anteriores",
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  mensajes: { type: "array", items: { $ref: "#/components/schemas/Mensaje" } },
+                  hayMas: { type: "boolean", description: "true si existen mensajes anteriores a los devueltos." },
+                },
+              },
+            },
+          },
+        },
+        "400": resp("VALIDATION_ERROR: limite no es un entero de 1 a 100, o antes no es una fecha ISO válida"),
+        "401": resp("UNAUTHORIZED: falta el token o no es válido"),
+        "403": resp("FORBIDDEN: no eres el anfitrión ni te uniste a la sala"),
+        "404": resp("ROOM_NOT_FOUND: no existe una sala con ese ID"),
+        "503": resp("FIRESTORE_UNAVAILABLE"),
+      },
+    },
+  },
+
 };
